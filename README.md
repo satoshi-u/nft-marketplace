@@ -1,4 +1,4 @@
-# Basic Sample Hardhat Project
+# NFT - MarketPlace
 
 clone the repo with :
 ```shell
