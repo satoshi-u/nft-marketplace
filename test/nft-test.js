@@ -1,5 +1,3 @@
-/*jshint esversion: 8 */
-
 const { ethers, waffle } = require("hardhat");
 const { expect } = require("chai");
 
@@ -83,7 +81,7 @@ describe("NFTMarket", function () {
     // console.log("auctionPrice: ", auctionPrice);
     let tx = await nftMarket.connect(buyer).createMarketSale(nft.address, 1, { value: auctionPrice }); // alternate way- auction price
     let txReceipt = await tx.wait();
-    [marketItemSoldEventLog] = txReceipt.events?.filter((x) => { return x.event == "MarketItemSold" });
+    [marketItemSoldEventLog] = txReceipt.events.filter((x) => { return x.event == "MarketItemSold" });
     // console.log("marketItemSoldEventLog: ", marketItemSoldEventLog);
     expect(marketItemSoldEventLog.args.tokenId).to.equal(1, "incorrect tokenId in MarketItemSold Event!");
     expect(marketItemSoldEventLog.args.itemId).to.equal(1, "incorrect itemId in MarketItemSold Event!");
@@ -93,24 +91,57 @@ describe("NFTMarket", function () {
 
   it('fetches Unsold MarketItems in NFTMarket', async function () {
     let marketItemsUnsold = await nftMarket.fetchMarketItems();
+    marketItemsUnsold = await Promise.all(marketItemsUnsold.map(async i => {
+      const tokenURI = await nft.tokenURI(i.tokenId);
+      let item = {
+        price: i.price.toString(),
+        tokenId: i.tokenId.toString(),
+        seller: i.seller,
+        owner: i.owner,
+        tokenURI
+      }
+      return item;
+    }))
     // console.log("marketItemsUnsold: ", marketItemsUnsold);
     expect(marketItemsUnsold.length).to.equal(1, "incorrect number of Unsold MarketItems!");
-    expect(marketItemsUnsold[0][0]).to.equal(2, "incorrect itemId1 for Unsold MarketItems!");
+    expect(marketItemsUnsold[0].tokenId).to.equal("2", "incorrect itemId1 for Unsold MarketItems!");
   })
 
   it('fetches MarketItems owned by buyer in NFTMarket', async function () {
     let marketItemsOwned = await nftMarket.connect(buyer).fetchMyNFTs();
+    marketItemsOwned = await Promise.all(marketItemsOwned.map(async i => {
+      const tokenURI = await nft.tokenURI(i.tokenId);
+      let item = {
+        price: i.price.toString(),
+        tokenId: i.tokenId.toString(),
+        seller: i.seller,
+        owner: i.owner,
+        tokenURI
+      }
+      return item;
+    }))
     // console.log("marketItemsOwned: ", marketItemsOwned);
     expect(marketItemsOwned.length).to.equal(1, "incorrect number of MarketItems owned by buyer!");
-    expect(marketItemsOwned[0][0]).to.equal(1, "incorrect itemId1 for MarketItems owned by buyer!");
+    expect(marketItemsOwned[0].tokenId).to.equal("1", "incorrect itemId1 for MarketItems owned by buyer!");
   })
 
   it('fetches MarketItems listed by seller in NFTMarket', async function () {
     let marketItemsCreated = await nftMarket.connect(seller).fetchItemsCreated();
+    marketItemsCreated = await Promise.all(marketItemsCreated.map(async i => {
+      const tokenURI = await nft.tokenURI(i.tokenId);
+      let item = {
+        price: i.price.toString(),
+        tokenId: i.tokenId.toString(),
+        seller: i.seller,
+        owner: i.owner,
+        tokenURI
+      }
+      return item;
+    }))
     // console.log("marketItemsCreated: ", marketItemsCreated);
     expect(marketItemsCreated.length).to.equal(2, "incorrect number of MarketItems listed by seller!");
-    expect(marketItemsCreated[0][0]).to.equal(1, "incorrect itemId1 for MarketItems listed by seller!");
-    expect(marketItemsCreated[1][0]).to.equal(2, "incorrect itemId2 for MarketItems listed by seller!");
+    expect(marketItemsCreated[0].tokenId).to.equal("1", "incorrect itemId1 for MarketItems listed by seller!");
+    expect(marketItemsCreated[1].tokenId).to.equal("2", "incorrect itemId2 for MarketItems listed by seller!");
     // console.log(Array.isArray(marketItemsCreated))
     // console.log(Array.isArray(marketItemsCreated[0]))
     // marketItemsCreated[0].forEach(function (item, index) {
@@ -118,4 +149,3 @@ describe("NFTMarket", function () {
     // });
   })
 })
-
